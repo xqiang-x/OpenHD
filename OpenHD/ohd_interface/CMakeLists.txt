@@ -66,6 +66,29 @@ target_link_libraries(OHDInterfaceLib PUBLIC ${WB_TARGET_LINK_LIBRARIES})
 find_package(Threads REQUIRED)
 target_link_libraries(OHDInterfaceLib PUBLIC Threads::Threads)
 
+# — tj_rtc (RtcLink) ——————————————————————————————————————————————————————————
+# rtc.txt 在运行时决定是否使用（仿 ethernet.txt）；构建期只要 tj_rtc SDK 源码
+# 存在即编译 RtcLink（见 openhd_rtc_link_design.md §6/§7.2）。
+# 开发期可 -DTJ_RTC_SDK_DIR=/path/to/tj_rtc；发布期 subtree 到 lib/tj_rtc。
+set(TJ_RTC_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/tj_rtc"
+    CACHE PATH "tj_rtc repository root")
+if(EXISTS "${TJ_RTC_SDK_DIR}/client_sdk/rtc_client_sdk/CMakeLists.txt")
+    add_subdirectory("${TJ_RTC_SDK_DIR}/client_sdk/rtc_client_sdk"
+                     "${CMAKE_BINARY_DIR}/_deps/rtc_client_sdk")
+    target_sources(OHDInterfaceLib PRIVATE
+        src/rtc_config.cpp
+        src/rtc_link.cpp
+        src/rtp_es_assembler.cpp
+        src/es_rtp_packetizer.cpp
+    )
+    target_link_libraries(OHDInterfaceLib PRIVATE rtc_client_sdk)
+    target_compile_definitions(OHDInterfaceLib PRIVATE OHD_HAS_RTC_LINK=1)
+    message(STATUS "ohd_interface: RtcLink enabled (tj_rtc: ${TJ_RTC_SDK_DIR})")
+else()
+    message(STATUS "ohd_interface: RtcLink disabled (tj_rtc not found at "
+                   "${TJ_RTC_SDK_DIR}; use -DTJ_RTC_SDK_DIR=<tj_rtc root>)")
+endif()
+
 # Custom testing
 add_executable(test_interface test/test_interface.cpp)
 target_link_libraries(test_interface OHDInterfaceLib)

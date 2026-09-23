@@ -1,0 +1,36 @@
+# rtc.txt —— RtcLink(tj_rtc) 配置文件示例
+# 存在性即开关：把本文件复制到目标机的 /Config/rtc.txt 即启用 RtcLink。
+# 注意：OpenHD 的 getConfigBasePath() 当前硬编码为 "/Config/"，
+# 因此设备上路径固定为 /Config/rtc.txt（与 ethernet.txt 同目录）。
+#
+# 键值均为可选，缺省即用下列默认值；未知键打印告警并忽略。
+
+# [必填] SFU 服务器地址（公网 VPS）
+server_ip=106.15.177.248
+
+# SFU 信令(TCP)端口
+tcp_port=9200
+
+# 首选 UDP 媒体面（推荐 1；被 NAT 阻断时可置 0 走 TCP 回退）
+use_udp=1
+
+# UDP 媒体端口；0 表示自动取 tcp_port+1
+udp_port=0
+
+# 流 ID 前缀：实际推流/订阅 id 为 <prefix>+相机索引，如 ohdsmoke0 / ohdsmoke1
+stream_prefix=ohdsmoke
+
+# 用户标识（air/ground 各一个，仅用于日志/控制面来源）
+user_id_air=ohd_air
+user_id_ground=ohd_gnd
+
+# SDK 发送 pacing 上限（Mbps）
+pacer_mbps=50
+
+# 各路相机推流开关（ground 端仅作为订阅依据，不推流）
+enable_cam0=1
+enable_cam1=0
+
+# M5 起生效：遥测/RC 可靠通道（0=UDP 按 n_injections 复制发送，默认；1=TCP 可靠单发）
+rc_reliable=0
+telemetry_reliable=0

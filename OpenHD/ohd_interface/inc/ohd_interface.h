@@ -45,6 +45,7 @@
 class WBLink;
 class MicrohardLink;
 class EthernetLink;
+class RtcLink;
 
 struct LinkControlRequest {
   std::optional<int> frequency_mhz;
@@ -120,6 +121,8 @@ class OHDInterface {
   std::unique_ptr<EthernetManager> m_ethernet_manager;
   std::unique_ptr<WifiHotspot> m_wifi_hotspot;
   std::shared_ptr<EthernetLink> m_ethernet_link;
+  // 非 RTC 构建下始终为空（成员声明不随 OHD_HAS_RTC_LINK 变化，避免类布局不一致）
+  std::shared_ptr<RtcLink> m_rtc_link;
   std::vector<WiFiCard> m_monitor_mode_cards{};
   std::optional<WiFiCard> m_opt_hotspot_card = std::nullopt;
   std::vector<WiFiCard> m_discovered_wifi_cards{};

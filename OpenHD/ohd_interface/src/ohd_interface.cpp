@@ -39,6 +39,9 @@
 #include "openhd_sock.h"
 #include "openhd_util_filesystem.h"
 #include "wb_link.h"
+#ifdef OHD_HAS_RTC_LINK
+#include "rtc_link.h"
+#endif
 // Helper function to execute a shell command and return the output
 std::string exec(const std::string& cmd) {
   std::array<char, 128> buffer;
@@ -82,6 +85,15 @@ OHDInterface::OHDInterface(OHDProfile profile1, bool disable_wifi_hotspot)
     m_console->warn("eth found");
     return;
   }
+
+#ifdef OHD_HAS_RTC_LINK
+  // rtc.txt 存在即启用 RtcLink（仿 ethernet.txt；见 openhd_rtc_link_design.md §6）
+  if (OHDFilesystemUtil::exists(std::string(getConfigBasePath()) + "rtc.txt")) {
+    m_rtc_link = std::make_shared<RtcLink>(m_profile);
+    m_console->warn("rtc found");
+    return;
+  }
+#endif
 
   if (microhard_device_present) {
     m_microhard_link = std::make_shared<MicrohardLink>(m_profile);
@@ -559,6 +571,10 @@ std::shared_ptr<OHDLink> OHDInterface::get_link_handle() {
     m_console->warn("Using alternative Link: Ethernet");
     return m_ethernet_link;
   }
+  if (m_rtc_link) {
+    m_console->warn("Using alternative Link: RTC(tj_rtc)");
+    return m_rtc_link;
+  }
   if (m_wb_link) {
     // m_console->warn("Using Link: OpenHD-WifiBroadCast");
     return m_wb_link;
@@ -572,7 +588,8 @@ std::shared_ptr<OHDLink> OHDInterface::get_link_handle() {
 
 bool OHDInterface::has_primary_link() const {
   return static_cast<bool>(m_wb_link) || static_cast<bool>(m_microhard_link) ||
-         static_cast<bool>(m_ethernet_link);
+         static_cast<bool>(m_ethernet_link) ||
+         static_cast<bool>(m_rtc_link);
 }
 
 bool OHDInterface::has_real_monitor_mode_cards() const {
